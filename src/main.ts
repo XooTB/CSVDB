@@ -75,6 +75,7 @@ export default class csvdb {
         if (validated.success) {
           const dataString = this.keys.map((key) => item[key]).join(", ");
           fs.appendFileSync(this.db, `${dataString}\n`);
+          return true;
         } else {
           throw new Error(validated.error.message);
         }
@@ -112,28 +113,10 @@ export default class csvdb {
    */
   public findOne(
     query: z.infer<typeof this.schema>
-  ): undefined | z.infer<typeof this.schema> {
-    const data = fs.readFileSync(this.db, "utf-8");
-    const dataArr = data.split("\n");
-    const result: any[] = [];
-    dataArr.forEach((item) => {
-      const itemArr = item.split(", ");
-      const obj: any = {};
+  ): z.infer<typeof this.schema> | undefined {
+    const result = this.getAll();
 
-      this.keys.forEach((key, index) => {
-        obj[key] = itemArr[index];
-      });
-      result.push(obj);
-    });
-
-    const keys = Object.keys(query);
-    const values = Object.values(query);
-
-    const found = result.filter((el) => {
-      if (el[keys[0]] === values[0]) {
-        return el;
-      }
-    });
+    const found = result.filter((el) => matchAll(query, el));
 
     let element = found[0];
 
@@ -150,23 +133,14 @@ export default class csvdb {
    * @param query The query object used to filter the records.
    * @returns An array of records that match the query, or undefined if no records are found.
    */
-  public findAll(query: z.infer<typeof this.schema>) {
-    const data = fs.readFileSync(this.db, "utf-8");
-    const dataArr = data.split("\n");
-    const result: any[] = [];
-
-    dataArr.forEach((item) => {
-      const itemArr = item.split(", ");
-      const obj: any = {};
-      this.keys.forEach((key, index) => {
-        obj[key] = itemArr[index];
-      });
-      result.push(obj);
-    });
+  public findAll(
+    query: z.infer<typeof this.schema>
+  ): z.infer<typeof this.schema>[] | undefined {
+    const result = this.getAll();
 
     const found = result.filter((item) => matchAll(query, item));
 
-    if (found.length > 1) return found;
+    if (found.length >= 1) return found;
     else return undefined;
   }
 
@@ -179,36 +153,27 @@ export default class csvdb {
   public updateOne(
     query: z.infer<typeof this.schema>,
     update: z.infer<typeof this.schema>
-  ) {
-    const data = fs.readFileSync(this.db, "utf-8");
-    const dataArr = data.split("\n");
-    const result: any[] = [];
+  ): boolean {
+    const data = this.getAll();
 
-    dataArr.forEach((item) => {
-      const itemArr = item.split(", ");
-      const obj: any = {};
-      this.keys.forEach((key, index) => {
-        obj[key] = itemArr[index];
-      });
-      result.push(obj);
-    });
-
-    const found = result.find((el) => matchAll(query, el));
+    const found = data.find((el) => matchAll(query, el));
 
     if (found) {
       const keys = Object.keys(update);
       const values = Object.values(update);
+
       keys.forEach((key, index) => {
         found[key] = values[index];
       });
 
-      const newData = result
+      const newData = data
         .map((item) => {
           const itemArr = this.keys.map((key) => item[key]);
           return itemArr.join(", ");
         })
         .join("\n");
       fs.writeFileSync(this.db, newData);
+      return true;
     } else {
       throw new Error("No data found");
     }
@@ -224,20 +189,9 @@ export default class csvdb {
     query: z.infer<typeof this.schema>,
     update: z.infer<typeof this.schema>
   ) {
-    const data = fs.readFileSync(this.db, "utf-8");
-    const dataArr = data.split("\n");
-    const result: any[] = [];
+    const data = this.getAll();
 
-    dataArr.forEach((item) => {
-      const itemArr = item.split(", ");
-      const obj: any = {};
-      this.keys.forEach((key, index) => {
-        obj[key] = itemArr[index];
-      });
-      result.push(obj);
-    });
-
-    const found = result.filter((item) => matchAll(query, item));
+    const found = data.filter((item) => matchAll(query, item));
 
     if (found.length > 0) {
       const keys = Object.keys(update);
@@ -247,7 +201,7 @@ export default class csvdb {
           item[key] = values[index];
         });
       });
-      const newData = result
+      const newData = data
         .map((item) => {
           const itemArr = this.keys.map((key) => item[key]);
           return itemArr.join(", ");
@@ -265,22 +219,12 @@ export default class csvdb {
    * @throws Error - If no matching record is found.
    */
   public deleteOne(query: z.infer<typeof this.schema>) {
-    const data = fs.readFileSync(this.db, "utf-8");
-    const dataArr = data.split("\n");
-    const result: any[] = [];
-    dataArr.forEach((item) => {
-      const itemArr = item.split(", ");
-      const obj: any = {};
-      this.keys.forEach((key, index) => {
-        obj[key] = itemArr[index];
-      });
-      result.push(obj);
-    });
+    const data = this.getAll();
 
-    const found = result.find((item) => matchAll(query, item));
+    const found = data.find((item) => matchAll(query, item));
 
     if (found) {
-      const newData = result
+      const newData = data
         .filter((item) => (matchAll(query, item) ? false : true))
         .map((item) => {
           const itemArr = this.keys.map((key) => item[key]);
@@ -295,17 +239,8 @@ export default class csvdb {
   }
 
   public deleteMany(query: z.infer<typeof this.schema>) {
-    const data = fs.readFileSync(this.db, "utf-8");
-    const dataArr = data.split("\n");
-    const result: any[] = [];
-    dataArr.forEach((item) => {
-      const itemArr = item.split(", ");
-      const obj: any = {};
-      this.keys.forEach((key, index) => {
-        obj[key] = itemArr[index];
-      });
-      result.push(obj);
-    });
+    const result = this.getAll();
+
     const keys = Object.keys(query);
     const values = Object.values(query);
 

@@ -3,7 +3,8 @@
   "module": "main.ts",
   "type": "module",
   "devDependencies": {
-    "bun-types": "latest"
+    "bun-types": "latest",
+    "@faker-js/faker": "^8.3.1"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
@@ -13,6 +14,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "start": "bun main.ts"
+    "start": "bun main.ts",
+    "dummy": "bun src/utils/generateDummy.ts"
   }
 }

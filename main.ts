@@ -1,6 +1,5 @@
-import { number } from "zod";
-import z from "zod";
 import csvdb from "./src/main";
+import generateDummy from "./src/utils/generateDummy";
 
 const db = new csvdb(import.meta.dir, "test.csv");
 
@@ -12,6 +11,4 @@ db.SchemaFactory({
   email: "string",
 });
 
-const x = db.deleteAll();
-
-console.log(x);
+console.log(db.deleteMany({}));
