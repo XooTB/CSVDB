@@ -33,8 +33,6 @@ test("Insert data into the database", () => {
 });
 
 test("Finds data in the database", () => {
-  db.insertMany(dummyData);
-
   const result = db.findOne({
     name: "John Doe",
     age: "25",

@@ -1,6 +1,10 @@
 {
   "name": "csvdb",
   "module": "main.ts",
+  "version": "0.0.1",
+  "description": "csvdb",
+  "author": "Samiul Alim",
+  "license": "MIT",
   "type": "module",
   "devDependencies": {
     "bun-types": "latest",
